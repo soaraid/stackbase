@@ -1,54 +1,24 @@
-# ============================================================
-# TEMPLATE CONFIG SITE (website baru)
-# ============================================================
-# Cara pakai:
-#   1. cp 00-CONTOH.conf.example namadomain-anda.com.conf
-#   2. Ganti semua "NAMADOMAIN" dengan domain asli kamu
-#   3. Ganti "NAMA-CONTAINER-APP" dan "PORT" sesuai app kamu
-#   4. Buat sertifikat SSL (langkahnya di README bagian
-#      "Menambah Website Baru")
-#   5. docker compose restart nginx
-#
-# Catatan: file dengan akhiran .example TIDAK akan dibaca nginx
-# (hanya file berakhiran .conf yang di-load).
-# ============================================================
-
-# --- Blok 1: HTTP (port 80) ---------------------------------
-# Semua yang buka http:// otomatis dialihkan ke https://
 server {
     listen 80;
     server_name NAMADOMAIN;
     return 301 https://$host$request_uri;
 }
 
-# --- Blok 2: HTTPS (port 443) -------------------------------
 server {
     listen 443 ssl http2;
     server_name NAMADOMAIN;
 
-    # Batas ukuran file upload. Kalau app perlu upload file besar,
-    # naikkan nilainya (mis. 100M), atau "0" = tanpa batas.
     client_max_body_size 50M;
 
-    # Sertifikat SSL dari certbot. Path-nya otomatis mengikuti
-    # nama domain setelah certbot selesai dijalankan di host.
     ssl_certificate /etc/letsencrypt/live/NAMADOMAIN/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/NAMADOMAIN/privkey.pem;
 
     location / {
-        # Alamat app yang jadi tujuan: NAMA-CONTAINER-APP:PORT
-        # (nama container = "container_name" di docker-compose app,
-        #  dan app wajib ikut network "proxy-network").
-        #
-        # Trik "set $app ...": agar nginx resolve ulang alamat app
-        # secara berkala, jadi aman saat container app restart/ganti IP.
         set $app NAMA-CONTAINER-APP:PORT;
 
         proxy_pass http://$app;
         proxy_http_version 1.1;
 
-        # Header standar — supaya app tahu permintaan asli datang
-        # dari siapa dan lewat https (jangan diubah, biarkan saja).
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -56,8 +26,6 @@ server {
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Port 443;
 
-        # Dukungan WebSocket (chat, live update, dll).
-        # Tidak mengganggu app biasa, biarkan aktif.
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_cache_bypass $http_upgrade;

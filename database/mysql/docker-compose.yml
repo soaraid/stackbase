@@ -1,44 +1,21 @@
-# ============================================================
-# MYSQL — database utama untuk semua aplikasi di server
-# ============================================================
-# Yang penting diketahui:
-# - Password di-set di file .env (salin dari .env.example).
-# - Port 3306 HANYA dibuka di localhost (127.0.0.1) — tidak bisa
-#   diakses dari luar server. Ini DISENGAJA demi keamanan.
-#   Kalau suatu saat butuh akses dari laptop, baca README bagian
-#   "Akses Database dari Luar" — jangan pernah buka port publik.
-# - Data tersimpan di /srv/data/mysql di host, bukan di dalam
-#   container. Jadi container dihapus/di-upgrade = data tetap aman.
-# ============================================================
-
 services:
   mysql:
     image: mysql:8.0
     container_name: mysql
-    restart: always   # selalu nyala lagi walau server restart
+    restart: always
 
     ports:
-      # Format: "HOST:CONTAINER"
-      # 127.0.0.1 = hanya bisa diakses dari dalam server ini.
-      # Aplikasi yang butuh database masuk lewat network Docker
-      # (lihat shared-db-network di bawah), bukan lewat port ini.
       - "127.0.0.1:3306:3306"
 
     env_file:
-      - .env          # berisi MYSQL_ROOT_PASSWORD + DATA_ROOT
+      - .env
 
     volumes:
-      # Seluruh data database disimpan di host:
-      #   ${DATA_ROOT} = /srv/data (diambil dari .env)
       - ${DATA_ROOT}/mysql:/var/lib/mysql
 
     networks:
       - shared-db-network
 
-# shared-db-network = "grup chat" Docker: container aplikasi yang
-# ikut network ini bisa konek ke database cukup dengan hostname
-# "mysql" port 3306 (tanpa perlu tahu IP).
-# Network ini dibuat oleh bootstrap.sh di root repo.
 networks:
   shared-db-network:
     external: true
