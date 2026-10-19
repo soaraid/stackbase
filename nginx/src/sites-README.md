@@ -1,7 +1,7 @@
 # Cara Membaca Config Site (folder `sites/`)
 
 Folder ini isinya **satu file `.conf` per domain**. Contoh:
-`app.kantor.com.conf`, `dashboard.kantor.com.conf`.
+`app.example.com.conf`, `dashboard.example.com.conf`.
 
 Kalau bingung istilahnya, baca bagian [Glossary](#glossary) di bawah.
 Yang mau langsung praktik, ikuti README utama bagian
@@ -14,7 +14,7 @@ Yang mau langsung praktik, ikuti README utama bagian
 ```
 server {
     listen 443 ssl;              <- dengarkan di port HTTPS
-    server_name app.kantor.com;  <- domain mana yang masuk ke blok ini
+    server_name app.example.com;  <- domain mana yang masuk ke blok ini
 
     ssl_certificate ...;         <- kunci + sertifikat SSL (dari certbot)
 
@@ -27,7 +27,7 @@ server {
 Alurnya:
 
 ```
-Browser ketik app.kantor.com
+Browser ketik app.example.com
    -> DNS mengarah ke IP server
    -> masuk nginx port 443
    -> nginx cocokkan "server_name"
@@ -47,7 +47,7 @@ Browser ketik app.kantor.com
 ## Aturan main
 
 - **Satu domain = satu file `.conf`.** Namanya samakan dengan domain
-  (contoh: `app.kantor.com.conf`) biar gampang dicari.
+  (contoh: `app.example.com.conf`) biar gampang dicari.
 - **Jangan edit config langsung di server** tanpa commit — repo ini
   adalah satu-satunya sumber kebenaran config.
 - Setelah edit, **selalu cek dulu**: `docker exec nginx nginx -t`.
