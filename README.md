@@ -18,7 +18,7 @@ sudo usermod -aG docker $USER   # logout-login dulu setelah ini
 git clone <URL-REPO> ~/stackbase && cd ~/stackbase
 
 # 3. Bootstrap — buat network, folder data, certbot, salin .env.example
-./bootstrap.sh
+bash bootstrap.sh
 
 # 4. Isi password database
 nano database/mysql/.env        # MYSQL_ROOT_PASSWORD wajib diisi
@@ -29,7 +29,7 @@ docker compose -f nginx/docker-compose.yml up -d
 docker ps                       # dua-duanya harus status Up
 
 # 6. Cron auto-renew SSL (opsional, disarankan)
-./scripts/setup-cron.sh
+bash scripts/setup-cron.sh
 ```
 
 ## Menambah Website
@@ -86,7 +86,7 @@ docker compose -f /path/ke/myapp/docker-compose.yml up -d
 
 ```bash
 # Backup manual — hasil: /srv/data/backup/mysql/YYYY-MM-DD_all.sql.gz, simpan 14 hari
-./scripts/backup.sh
+bash scripts/backup.sh
 
 # Restore satu database
 gunzip < /srv/data/backup/mysql/2026-10-19_all.sql.gz \
