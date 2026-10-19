@@ -100,8 +100,8 @@ cd ~/stackbase
 ./bootstrap.sh
 ```
 
-Script ini: cek Docker, buat network antar container, buat folder data
-di `/srv/data`, dan menyalin template `.env`.
+Script ini: cek Docker & certbot, buat network antar container, buat
+folder data di `/srv/data`, dan menyalin template `.env`.
 
 ### Langkah 4 — Isi password database
 
@@ -123,14 +123,13 @@ docker compose -f nginx/docker-compose.yml up -d
 docker ps
 ```
 
-### Langkah 6 — Setup SSL (certbot di host, sekali)
+### Langkah 6 — Buat sertifikat SSL domain pertama
 
-Sertifikat SSL dibuat di **host** (bukan di Docker), lalu otomatis
-terbaca oleh nginx lewat mount.
+Sertifikat SSL dibuat di **host** (bukan di Docker) dengan certbot
+(sudah dipasang oleh bootstrap.sh), lalu otomatis terbaca oleh nginx
+lewat mount.
 
 ```bash
-sudo apt install -y certbot
-
 # Buat sertifikat untuk domain pertama.
 # (Domain harus sudah diarahkan ke IP server lewat DNS dulu!)
 sudo certbot certonly --standalone -d app.kantor.com
@@ -142,24 +141,15 @@ sudo certbot certonly --standalone -d app.kantor.com
 > nginx tetap jalan dan sertifikat berikutnya bisa dibuat dengan
 > `--webroot` atau stop-start lagi.
 
-### Langkah 7 — Setup renew SSL otomatis + backup otomatis (cron)
+### Langkah 7 — Pasang auto-renew SSL (sekali, opsional tapi disarankan)
 
 ```bash
-sudo crontab -e
+./scripts/setup-cron.sh
 ```
 
-Tambahkan dua baris ini:
-
-```cron
-# Perpanjang sertifikat SSL 2x sehari (hanya renew kalau mendekati kadaluarsa),
-# lalu reload nginx supaya sertifikat baru terpakai
-0 3,15 * * * certbot renew --quiet --deploy-hook "docker exec nginx nginx -s reload"
-
-# Backup database tiap jam 2 pagi
-0 2 * * * /home/USERNAME/stackbase/scripts/backup.sh
-```
-
-(Ganti `USERNAME` dengan user di server.)
+Script ini memasang cron di server: sertifikat diperpanjang otomatis
+2x sehari (hanya yang mendekati kadaluarsa) dan nginx langsung reload.
+Cek kalau sudah terpasang: `sudo crontab -l`.
 
 **Selesai.** Lanjut ke [Tugas Rutin](#3-tugas-rutin) untuk menambah website pertama.
 
@@ -255,7 +245,11 @@ gunzip < /srv/data/backup/mysql/2026-10-19_all.sql.gz \
   | docker exec -i mysql sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" db_kantor'
 ```
 
-Backup otomatis jalan tiap jam 2 pagi (cron dari Langkah 7), simpan 14 hari.
+Saat ini backup berjalan **manual** — jalankan `scripts/backup.sh`
+kapan saja perlu. Simpan 14 hari terakhir.
+
+> Kalau nanti mau dibuat otomatis (mis. tiap jam 2 pagi), tinggal
+> tambahkan baris ini ke crontab: `0 2 * * * /path/ke/stackbase/scripts/backup.sh`
 
 > Saran: backup di server yang sama tetap bisa hilang kalau servernya
 > yang mati. Kalau kantor punya storage/NAS/akun cloud lain, salin folder
@@ -317,7 +311,8 @@ stackbase/
 ├── README.md                  <- dokumen ini
 ├── bootstrap.sh               <- setup awal server (sekali jalan)
 ├── scripts/
-│   └── backup.sh              <- backup database otomatis (dipanggil cron)
+│   ├── backup.sh              <- backup database manual (opsional dibuat cron)
+│   └── setup-cron.sh          <- pasang cron auto-renew SSL (opsional)
 ├── database/
 │   └── mysql/                 <- service database
 │       ├── docker-compose.yml

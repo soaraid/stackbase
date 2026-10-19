@@ -21,6 +21,13 @@ if ! docker compose version >/dev/null 2>&1; then
 fi
 echo "OK: $(docker --version)"
 
+say "Cek certbot (untuk SSL)..."
+if command -v certbot >/dev/null 2>&1; then
+  echo "OK: certbot sudah ada"
+else
+  sudo apt install -y certbot
+fi
+
 say "Siapkan network Docker..."
 docker network create proxy-network >/dev/null 2>&1 \
   && echo "OK: proxy-network dibuat" \
@@ -60,4 +67,6 @@ Langkah selanjutnya:
        docker compose -f database/mysql/docker-compose.yml up -d
        docker compose -f nginx/docker-compose.yml up -d
   3. Setup domain + SSL: ikuti README bagian "Menambah Website Baru".
+  4. (Opsional, disarankan) pasang auto-renew SSL:
+       ./scripts/setup-cron.sh
 EOF
